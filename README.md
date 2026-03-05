@@ -5,6 +5,7 @@ A collection of Azure Monitor Workbooks for Microsoft Sentinel cost analysis and
 ---
 
 ## Sentinel Ingest Cost Analysis
+### ***NOTE: This Workbook currently only works in the Azure Portal (there is a bug in the Defender Portal)
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fnemesis1286%2Fsentinel-workbooks%2Fmain%2FWorkbooks%2FSentinel-Ingest-Cost.json)
 
