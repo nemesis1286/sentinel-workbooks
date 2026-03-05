@@ -10,16 +10,15 @@
     },
     "workbookType": {
       "type": "string",
-      "defaultValue": "workbook",
+      "defaultValue": "sentinel",
       "metadata": {
-        "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
+        "description": "The gallery that the workbook will be shown under. Must be 'sentinel' to appear in the Microsoft Sentinel Workbooks blade."
       }
     },
     "workbookSourceId": {
       "type": "string",
-      "defaultValue": "Azure Monitor",
       "metadata": {
-        "description": "The id of resource instance to which the workbook will be associated"
+        "description": "The full resource ID of the Log Analytics workspace linked to Microsoft Sentinel. Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}"
       }
     },
     "workbookId": {
