@@ -20,6 +20,9 @@
             "type": 1,
             "isRequired": true,
             "query": "where type =~ 'microsoft.operationalinsights/workspaces'\r\n| take 1\r\n| project subscriptionId",
+            "crossComponentResources": [
+              "value::selected"
+            ],
             "isHiddenWhenLocked": true,
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources"
@@ -161,7 +164,8 @@
           }
         ],
         "style": "above",
-        "queryType": 12
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
       },
       "name": "parameters"
     },
@@ -187,6 +191,9 @@
               "title": "Analytic Ingestion",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "tiles",
               "gridSettings": {
                 "formatters": [
@@ -258,6 +265,9 @@
               "title": "Data Lake Ingestion",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "tiles",
               "gridSettings": {
                 "formatters": [
@@ -329,6 +339,9 @@
               "title": "Total Ingestion",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "tiles",
               "gridSettings": {
                 "formatters": [
@@ -417,6 +430,9 @@
               "title": "Analytics Tier — Ingestion & Cost per Table",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "table",
               "gridSettings": {
                 "formatters": [
@@ -466,6 +482,9 @@
               "title": "Analytics Tier — Top 10 Tables by Volume",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "piechart"
             },
             "customWidth": "25",
@@ -480,6 +499,9 @@
               "title": "Analytics Tier — Totals",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "tiles",
               "tileSettings": {
                 "titleContent": {},
@@ -526,6 +548,9 @@
               "title": "Analytics Tier — Daily Ingestion Trend",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "timechart"
             },
             "name": "analytics-trend"
@@ -556,6 +581,9 @@
               "title": "Data Lake Tier — Ingestion & Cost per Table",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "table",
               "gridSettings": {
                 "formatters": [
@@ -605,6 +633,9 @@
               "title": "Data Lake Tier — Top 10 Tables by Volume",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "piechart"
             },
             "customWidth": "25",
@@ -619,6 +650,9 @@
               "title": "Data Lake Tier — Totals",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "tiles",
               "tileSettings": {
                 "titleContent": {},
@@ -782,6 +816,9 @@
               "title": "Data Lake Tier — Daily Ingestion Trend",
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
+              "crossComponentResources": [
+                "{Workspace}"
+              ],
               "visualization": "timechart"
             },
             "name": "datalake-trend"
@@ -806,6 +843,9 @@
         "title": "What-If Analysis — Top 15 Analytics Tables: Potential Savings if Moved to Data Lake",
         "queryType": 0,
         "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspace}"
+        ],
         "visualization": "table",
         "gridSettings": {
           "formatters": [
@@ -881,7 +921,7 @@
     }
   ],
   "fallbackResourceIds": [
-    "/subscriptions/9a22ee7f-f55e-4b7c-a8ff-594a3aa71d37/resourcegroups/rg-sentinel/providers/microsoft.operationalinsights/workspaces/sentinel-xdr"
+    "Azure Monitor"
   ],
   "fromTemplateId": "sentinel-TCOCostWorkbook",
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
