@@ -3,14 +3,14 @@
   "parameters": {
     "workbookDisplayName": {
       "type": "string",
-      "defaultValue": "Unsaved Workbook - 3/5/2026, 3:59 PM",
+      "defaultValue": "Sentinel Ingestion Costs",
       "metadata": {
         "description": "The friendly name for the workbook that is used in the Gallery or Saved List.  This name must be unique within a resource group."
       }
     },
     "workbookType": {
       "type": "string",
-      "defaultValue": "workbook",
+      "defaultValue": "sentinel",
       "metadata": {
         "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
       }
