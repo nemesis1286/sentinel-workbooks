@@ -70,7 +70,7 @@
             },
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources",
-            "value": "/subscriptions/9a22ee7f-f55e-4b7c-a8ff-594a3aa71d37/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-xdr"
+            "value": null
           },
           {
             "id": "1b5e58e7-d017-435f-88d4-71dbe835552e",
@@ -494,7 +494,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let dataLakeTablesRaw = \"{DataLakeTables}\";\nlet dataLakeList = split(dataLakeTablesRaw, \",\");\nlet dataLakeSet = toscalar(\n    print list = dataLakeList\n    | mv-expand list\n    | extend t = trim(\" \", tostring(list))\n    | where isnotempty(t)\n    | summarize make_set(t)\n);\nlet costPerGB = todouble(\"{AnalyticsCostPerGB}\");\nUsage\n| where TimeGenerated {TimeRange}\n| where IsBillable == true\n| summarize TotalMB = sum(Quantity) by DataType\n| extend TotalGB = round(TotalMB / 1024.0, 4)\n| where not(set_has_element(dataLakeSet, DataType))\n| summarize\n    ['Total Ingestion (GB)'] = round(sum(TotalGB), 2),\n    ['Table Count'] = dcount(DataType)\n| extend ['Total Estimated Cost (USD)'] = round(['Total Ingestion (GB)'] * costPerGB, 2)",
+              "query": "let dataLakeTablesRaw = \"{DataLakeTables}\";\nlet dataLakeList = split(dataLakeTablesRaw, \",\");\nlet dataLakeSet = toscalar(\n    print list = dataLakeList\n    | mv-expand list\n    | extend t = trim(\" \", tostring(list))\n    | where isnotempty(t)\n    | summarize make_set(t)\n);\nlet analyticsCost = todouble(\"{AnalyticsCostPerGB}\");\nlet dataLakeCost = todouble(\"{DataLakeCostPerGB}\");\nUsage\n| where TimeGenerated {TimeRange}\n| where IsBillable == true\n| summarize TotalMB = sum(Quantity) by DataType\n| extend TotalGB = round(TotalMB / 1024.0, 4)\n| extend Tier = iff(set_has_element(dataLakeSet, DataType), \"Data Lake\", \"Analytics\")\n| extend CostPerGB = iff(Tier == \"Data Lake\", dataLakeCost, analyticsCost)\n| extend EstimatedCost = round(TotalGB * CostPerGB, 2)\n| summarize\n    AnalyticsGB = round(sumif(TotalGB, Tier == \"Analytics\"), 2),\n    AnalyticsCost = round(sumif(EstimatedCost, Tier == \"Analytics\"), 2),\n    DataLakeGB = round(sumif(TotalGB, Tier == \"Data Lake\"), 2),\n    DataLakeCost = round(sumif(EstimatedCost, Tier == \"Data Lake\"), 2)\n| extend\n    TotalGB = round(AnalyticsGB + DataLakeGB, 2),\n    TotalCost = round(AnalyticsCost + DataLakeCost, 2)\n| project\n    ['Analytics (GB)'] = AnalyticsGB,\n    ['Analytics Cost ($)'] = AnalyticsCost,\n    ['Data Lake (GB)'] = DataLakeGB,\n    ['Data Lake Cost ($)'] = DataLakeCost,\n    ['Total (GB)'] = TotalGB,\n    ['Total Cost ($)'] = TotalCost",
               "size": 4,
               "title": "Analytics Tier — Totals",
               "queryType": 0,
@@ -506,7 +506,7 @@
               "tileSettings": {
                 "titleContent": {},
                 "leftContent": {
-                  "columnMatch": "Total Ingestion (GB)",
+                  "columnMatch": "Analytics (GB)",
                   "formatter": 12,
                   "formatOptions": {
                     "palette": "auto"
@@ -519,10 +519,10 @@
                   }
                 },
                 "rightContent": {
-                  "columnMatch": "Total Estimated Cost (USD)",
+                  "columnMatch": "Analytics Cost ($)",
                   "formatter": 12,
                   "formatOptions": {
-                    "palette": "greenRed"
+                    "palette": "none"
                   },
                   "numberFormat": {
                     "unit": 0,
@@ -554,6 +554,123 @@
               "visualization": "timechart"
             },
             "name": "analytics-trend"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"/subscriptions/{Subscription:id}/resourcegroups/{Workspace:resourcegroup}/providers/microsoft.operationalinsights/workspaces/{Workspace:name}/tables?api-version=2021-12-01-preview\",\"urlParams\":[],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.value[?(@.properties.plan==\\\"Analytics\\\")]\",\"columns\":[{\"path\":\"name\",\"columnid\":\"TableName\",\"columnType\":\"string\"},{\"path\":\"$..properties.schema.tableType\",\"columnid\":\"TableType\",\"columnType\":\"string\"},{\"path\":\"$..properties.totalRetentionInDays\",\"columnid\":\"TotalRetentionInDays\",\"columnType\":\"long\"}]}}]}",
+              "size": 0,
+              "title": "Analytic Tables - Table Types and Retention",
+              "queryType": 12,
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TableType",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Microsoft",
+                          "representation": "blue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "CustomLog",
+                          "representation": "amethyst",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "yellowDark",
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "TotalRetentionInDays",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "min": 0,
+                      "palette": "turquoise",
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "InteractiveRetentionInDays",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 730,
+                      "palette": "purpleBlue",
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ArchiveRetentionInDays",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "min": 0,
+                      "palette": "purpleDark",
+                      "customColumnWidthSetting": "28ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Estimated Cost",
+                    "formatter": 3,
+                    "formatOptions": {
+                      "palette": "green"
+                    },
+                    "numberFormat": {
+                      "unit": 0,
+                      "options": {
+                        "style": "decimal",
+                        "minimumFractionDigits": 2,
+                        "maximumFractionDigits": 2
+                      }
+                    }
+                  },
+                  {
+                    "columnMatch": "Ingestion",
+                    "formatter": 3,
+                    "formatOptions": {
+                      "palette": "teal"
+                    },
+                    "numberFormat": {
+                      "unit": 0,
+                      "options": {
+                        "style": "decimal",
+                        "minimumFractionDigits": 2,
+                        "maximumFractionDigits": 2
+                      }
+                    }
+                  }
+                ],
+                "labelSettings": [
+                  {
+                    "columnId": "TableName",
+                    "label": "Table Name"
+                  },
+                  {
+                    "columnId": "TableType",
+                    "label": "Table Type"
+                  },
+                  {
+                    "columnId": "TotalRetentionInDays",
+                    "label": "Total Retention Days"
+                  }
+                ]
+              },
+              "sortBy": []
+            },
+            "name": "Analytic Tables - Table Types and Retention"
           }
         ]
       },
@@ -645,7 +762,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let dataLakeTablesRaw = \"{DataLakeTables}\";\nlet dataLakeList = split(dataLakeTablesRaw, \",\");\nlet dataLakeSet = toscalar(\n    print list = dataLakeList\n    | mv-expand list\n    | extend t = trim(\" \", tostring(list))\n    | where isnotempty(t)\n    | summarize make_set(t)\n);\nlet costPerGB = todouble(\"{DataLakeCostPerGB}\");\nUsage\n| where TimeGenerated {TimeRange}\n| where IsBillable == true\n| summarize TotalMB = sum(Quantity) by DataType\n| extend TotalGB = round(TotalMB / 1024.0, 4)\n| where set_has_element(dataLakeSet, DataType)\n| summarize\n    ['Total Ingestion (GB)'] = round(sum(TotalGB), 2),\n    ['Table Count'] = dcount(DataType)\n| extend ['Total Estimated Cost (USD)'] = round(['Total Ingestion (GB)'] * costPerGB, 2)",
+              "query": "let dataLakeTablesRaw = \"{DataLakeTables}\";\nlet dataLakeList = split(dataLakeTablesRaw, \",\");\nlet dataLakeSet = toscalar(\n    print list = dataLakeList\n    | mv-expand list\n    | extend t = trim(\" \", tostring(list))\n    | where isnotempty(t)\n    | summarize make_set(t)\n);\nlet analyticsCost = todouble(\"{AnalyticsCostPerGB}\");\nlet dataLakeCost = todouble(\"{DataLakeCostPerGB}\");\nUsage\n| where TimeGenerated {TimeRange}\n| where IsBillable == true\n| summarize TotalMB = sum(Quantity) by DataType\n| extend TotalGB = round(TotalMB / 1024.0, 4)\n| extend Tier = iff(set_has_element(dataLakeSet, DataType), \"Data Lake\", \"Analytics\")\n| extend CostPerGB = iff(Tier == \"Data Lake\", dataLakeCost, analyticsCost)\n| extend EstimatedCost = round(TotalGB * CostPerGB, 2)\n| summarize\n    AnalyticsGB = round(sumif(TotalGB, Tier == \"Analytics\"), 2),\n    AnalyticsCost = round(sumif(EstimatedCost, Tier == \"Analytics\"), 2),\n    DataLakeGB = round(sumif(TotalGB, Tier == \"Data Lake\"), 2),\n    DataLakeCost = round(sumif(EstimatedCost, Tier == \"Data Lake\"), 2)\n| extend\n    TotalGB = round(AnalyticsGB + DataLakeGB, 2),\n    TotalCost = round(AnalyticsCost + DataLakeCost, 2)\n| project\n    ['Analytics (GB)'] = AnalyticsGB,\n    ['Analytics Cost ($)'] = AnalyticsCost,\n    ['Data Lake (GB)'] = DataLakeGB,\n    ['Data Lake Cost ($)'] = DataLakeCost,\n    ['Total (GB)'] = TotalGB,\n    ['Total Cost ($)'] = TotalCost",
               "size": 4,
               "title": "Data Lake Tier — Totals",
               "queryType": 0,
@@ -657,7 +774,7 @@
               "tileSettings": {
                 "titleContent": {},
                 "leftContent": {
-                  "columnMatch": "Total Ingestion (GB)",
+                  "columnMatch": "Data Lake (GB)",
                   "formatter": 12,
                   "formatOptions": {
                     "palette": "coldHot"
@@ -670,10 +787,10 @@
                   }
                 },
                 "rightContent": {
-                  "columnMatch": "Total Estimated Cost (USD)",
+                  "columnMatch": "Data Lake Cost ($)",
                   "formatter": 12,
                   "formatOptions": {
-                    "palette": "greenRed"
+                    "palette": "none"
                   },
                   "numberFormat": {
                     "unit": 0,
@@ -694,7 +811,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"/subscriptions//9a22ee7f-f55e-4b7c-a8ff-594a3aa71d37/resourcegroups/rg-sentinel/providers/microsoft.operationalinsights/workspaces/sentinel-xdr/tables?api-version=2021-12-01-preview\",\"urlParams\":[],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.value[?(@.properties.plan==\\\"Auxiliary\\\")]\",\"columns\":[{\"path\":\"name\",\"columnid\":\"TableName\",\"columnType\":\"string\"},{\"path\":\"$..properties.schema.tableType\",\"columnid\":\"TableType\",\"columnType\":\"string\"},{\"path\":\"$..properties.totalRetentionInDays\",\"columnid\":\"TotalRetentionInDays\",\"columnType\":\"long\"}]}}]}",
+              "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"/subscriptions/{Subscription:id}/resourcegroups/{Workspace:resourcegroup}/providers/microsoft.operationalinsights/workspaces/{Workspace:name}/tables?api-version=2021-12-01-preview\",\"urlParams\":[],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.value[?(@.properties.plan==\\\"Auxiliary\\\")]\",\"columns\":[{\"path\":\"name\",\"columnid\":\"TableName\",\"columnType\":\"string\"},{\"path\":\"$..properties.schema.tableType\",\"columnid\":\"TableType\",\"columnType\":\"string\"},{\"path\":\"$..properties.totalRetentionInDays\",\"columnid\":\"TotalRetentionInDays\",\"columnType\":\"long\"}]}}]}",
               "size": 0,
               "title": "Data Lake Tables - Table Types and Retention",
               "queryType": 12,
@@ -825,7 +942,7 @@
           }
         ]
       },
-      "name": "Data Lake Group"
+      "name": "Data Lake Group - Copy"
     },
     {
       "type": 1,
@@ -921,7 +1038,7 @@
     }
   ],
   "fallbackResourceIds": [
-    "Azure Monitor"
+    "azure monitor"
   ],
   "fromTemplateId": "sentinel-TCOCostWorkbook",
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
